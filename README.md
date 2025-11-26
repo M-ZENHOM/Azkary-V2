@@ -21,8 +21,8 @@ A lightweight desktop app for periodic Islamic Azkar (remembrance) notifications
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/azkar-app-rust.git
-cd azkar-app-rust
+git clone https://github.com/M-ZENHOM/Azkary-V2.git
+cd Azkary-V2
 
 # Install dependencies
 bun install
