@@ -25,13 +25,13 @@ git clone https://github.com/yourusername/azkar-app-rust.git
 cd azkar-app-rust
 
 # Install dependencies
-npm install
+bun install
 
 # Run in development
-npm run tauri dev
+bun run tauri dev
 
 # Build for production
-npm run tauri build
+bun run tauri build
 ```
 
 ## Usage
