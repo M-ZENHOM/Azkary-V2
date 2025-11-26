@@ -14,7 +14,7 @@ A lightweight desktop app for periodic Islamic Azkar (remembrance) notifications
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) (v18+)
+- [Node.js](https://nodejs.org/) (v20.9.0+)
 - [Rust](https://www.rust-lang.org/tools/install)
 
 ### Setup
