@@ -22,6 +22,8 @@ function App() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
   const [autostart, setAutostart] = useState(false);
+  const [intervalUnit, setIntervalUnit] = useState<"seconds" | "minutes" | "hours">("minutes");
+  const [intervalValue, setIntervalValue] = useState<number | string>("");
 
   const fetchData = async () => {
     try {
@@ -53,6 +55,28 @@ function App() {
       unlisten.then((f) => f());
     };
   }, []);
+
+  useEffect(() => {
+    if (data) {
+      const currentSecondsInState = 
+        intervalUnit === "hours" ? Number(intervalValue) * 3600 :
+        intervalUnit === "minutes" ? Number(intervalValue) * 60 :
+        Number(intervalValue);
+      
+      if (Math.abs(currentSecondsInState - data.interval_seconds) > 0.5) {
+         if (data.interval_seconds % 3600 === 0) {
+           setIntervalUnit("hours");
+           setIntervalValue(data.interval_seconds / 3600);
+         } else if (data.interval_seconds % 60 === 0) {
+           setIntervalUnit("minutes");
+           setIntervalValue(data.interval_seconds / 60);
+         } else {
+           setIntervalUnit("seconds");
+           setIntervalValue(data.interval_seconds);
+         }
+      }
+    }
+  }, [data]);
 
   const handleAddZekr = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,16 +121,55 @@ function App() {
     }
   };
 
-  const handleIntervalChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = parseInt(e.target.value);
-    if (val > 0) {
-      try {
-        const result = await invoke<AppData>("set_interval", { seconds: val });
-        setData(result);
-      } catch (error) {
-        console.error("Failed to set interval:", error);
-      }
+  const updateInterval = async (val: number, unit: string) => {
+    let seconds = 0;
+    if (unit === "hours") seconds = val * 3600;
+    else if (unit === "minutes") seconds = val * 60;
+    else seconds = val;
+
+    seconds = Math.round(seconds);
+    if (seconds < 1) return;
+
+    try {
+      const result = await invoke<AppData>("set_interval", { seconds });
+      setData(result);
+    } catch (error) {
+      console.error("Failed to set interval:", error);
     }
+  };
+
+  const handleIntervalValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setIntervalValue(val);
+    
+    const num = parseFloat(val);
+    if (!isNaN(num)) {
+      updateInterval(num, intervalUnit);
+    }
+  };
+
+  const handleIntervalUnitChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newUnit = e.target.value as "seconds" | "minutes" | "hours";
+    const currentVal = Number(intervalValue);
+    
+    let seconds = 0;
+    if (intervalUnit === "hours") seconds = currentVal * 3600;
+    else if (intervalUnit === "minutes") seconds = currentVal * 60;
+    else seconds = currentVal;
+
+    if (data && Math.abs(seconds - data.interval_seconds) < 0.5) {
+      seconds = data.interval_seconds;
+    }
+    
+    let newVal = 0;
+    if (newUnit === "hours") newVal = seconds / 3600;
+    else if (newUnit === "minutes") newVal = seconds / 60;
+    else newVal = seconds;
+    
+    newVal = Math.round(newVal * 10000) / 10000;
+    
+    setIntervalUnit(newUnit);
+    setIntervalValue(newVal);
   };
 
   const handleAutostartToggle = async () => {
@@ -136,16 +199,29 @@ function App() {
         <section className="settings-section">
           <h2>Settings</h2>
           <div className="setting-item">
-            <label>Notification Interval (seconds):</label>
-            <input
-              type="number"
-              min="1"
-              value={data.interval_seconds}
-              onChange={handleIntervalChange}
-            />
+            <label>Notification Interval:</label>
+            <div className="interval-input-group">
+              <input
+                type="number"
+                min="0.1"
+                step="any"
+                value={intervalValue}
+                onChange={handleIntervalValueChange}
+                className="interval-input"
+              />
+              <select 
+                value={intervalUnit} 
+                onChange={handleIntervalUnitChange}
+                className="interval-select"
+              >
+                <option value="seconds">Seconds</option>
+                <option value="minutes">Minutes</option>
+                <option value="hours">Hours</option>
+              </select>
+            </div>
           </div>
           <div className="setting-item">
-            <span>Start with Windows:</span>
+            <label htmlFor="autostart-toggle">Run on Startup</label>
             <div className="toggle-wrapper">
               <input
                 type="checkbox"

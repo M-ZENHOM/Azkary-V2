@@ -37,7 +37,7 @@ impl Default for AppData {
                 Zekr { id: "5".into(), text: "أستغفر الله".into() },
                 Zekr { id: "6".into(), text: "لا حول ولا قوة إلا بالله".into() },
             ],
-            interval_seconds: 900, // 15 minutes default
+            interval_seconds: 60, // 1 minutes default
             daily_count: 0,
             last_reset_date: Local::now().format("%Y-%m-%d").to_string(),
             last_notification_time: 0,
