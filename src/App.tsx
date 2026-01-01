@@ -14,6 +14,7 @@ interface AppData {
   daily_count: number;
   last_reset_date: string;
   last_notification_time: number;
+  is_paused: boolean;
 }
 
 function App() {
@@ -58,22 +59,22 @@ function App() {
 
   useEffect(() => {
     if (data) {
-      const currentSecondsInState = 
+      const currentSecondsInState =
         intervalUnit === "hours" ? Number(intervalValue) * 3600 :
-        intervalUnit === "minutes" ? Number(intervalValue) * 60 :
-        Number(intervalValue);
-      
+          intervalUnit === "minutes" ? Number(intervalValue) * 60 :
+            Number(intervalValue);
+
       if (Math.abs(currentSecondsInState - data.interval_seconds) > 0.5) {
-         if (data.interval_seconds % 3600 === 0) {
-           setIntervalUnit("hours");
-           setIntervalValue(data.interval_seconds / 3600);
-         } else if (data.interval_seconds % 60 === 0) {
-           setIntervalUnit("minutes");
-           setIntervalValue(data.interval_seconds / 60);
-         } else {
-           setIntervalUnit("seconds");
-           setIntervalValue(data.interval_seconds);
-         }
+        if (data.interval_seconds % 3600 === 0) {
+          setIntervalUnit("hours");
+          setIntervalValue(data.interval_seconds / 3600);
+        } else if (data.interval_seconds % 60 === 0) {
+          setIntervalUnit("minutes");
+          setIntervalValue(data.interval_seconds / 60);
+        } else {
+          setIntervalUnit("seconds");
+          setIntervalValue(data.interval_seconds);
+        }
       }
     }
   }, [data]);
@@ -141,7 +142,7 @@ function App() {
   const handleIntervalValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setIntervalValue(val);
-    
+
     const num = parseFloat(val);
     if (!isNaN(num)) {
       updateInterval(num, intervalUnit);
@@ -151,7 +152,7 @@ function App() {
   const handleIntervalUnitChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newUnit = e.target.value as "seconds" | "minutes" | "hours";
     const currentVal = Number(intervalValue);
-    
+
     let seconds = 0;
     if (intervalUnit === "hours") seconds = currentVal * 3600;
     else if (intervalUnit === "minutes") seconds = currentVal * 60;
@@ -160,14 +161,14 @@ function App() {
     if (data && Math.abs(seconds - data.interval_seconds) < 0.5) {
       seconds = data.interval_seconds;
     }
-    
+
     let newVal = 0;
     if (newUnit === "hours") newVal = seconds / 3600;
     else if (newUnit === "minutes") newVal = seconds / 60;
     else newVal = seconds;
-    
+
     newVal = Math.round(newVal * 10000) / 10000;
-    
+
     setIntervalUnit(newUnit);
     setIntervalValue(newVal);
   };
@@ -178,6 +179,15 @@ function App() {
       setAutostart(!autostart);
     } catch (error) {
       console.error("Failed to set autostart:", error);
+    }
+  };
+
+  const handleTogglePause = async () => {
+    try {
+      const result = await invoke<AppData>("toggle_pause");
+      setData(result);
+    } catch (error) {
+      console.error("Failed to toggle pause:", error);
     }
   };
 
@@ -209,8 +219,8 @@ function App() {
                 onChange={handleIntervalValueChange}
                 className="interval-input"
               />
-              <select 
-                value={intervalUnit} 
+              <select
+                value={intervalUnit}
                 onChange={handleIntervalUnitChange}
                 className="interval-select"
               >
@@ -218,6 +228,20 @@ function App() {
                 <option value="minutes">Minutes</option>
                 <option value="hours">Hours</option>
               </select>
+            </div>
+          </div>
+          <div className="setting-item">
+            <label htmlFor="pause-toggle">
+              {data.is_paused ? "Notifications are Disabled" : "Notifications are Enabled"}
+            </label>
+            <div className="toggle-wrapper">
+              <input
+                type="checkbox"
+                id="pause-toggle"
+                checked={!data.is_paused}
+                onChange={handleTogglePause}
+              />
+              <label htmlFor="pause-toggle"></label>
             </div>
           </div>
           <div className="setting-item">

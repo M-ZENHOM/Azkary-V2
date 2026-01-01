@@ -27,6 +27,8 @@ body {
 .container {
   width: 100%;
   padding: 1.5rem;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 header {
@@ -93,27 +95,16 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 .setting-item:last-child {
   margin-bottom: 0;
 }
 
-.setting-item label,
-.setting-item span {
+.setting-item label {
   font-size: 0.95rem;
-}
-
-input[type="number"] {
-  background-color: var(--bg-color);
-  border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--text-primary);
-  padding: 0.5rem;
-  border-radius: 6px;
-  width: 70px;
-  text-align: center;
-  font-size: 1rem;
 }
 
 /* Custom Toggle Switch */
@@ -171,6 +162,7 @@ input[type="number"] {
   background-color: var(--accent-hover);
 }
 
+/* Form and List Styles */
 .add-form {
   display: flex;
   gap: 0.5rem;
@@ -187,6 +179,11 @@ input[type="text"] {
   font-size: 0.95rem;
 }
 
+input[type="text"]:focus {
+  outline: 2px solid var(--accent-color);
+  border-color: transparent;
+}
+
 button {
   background-color: var(--accent-color);
   color: #0f172a;
@@ -195,12 +192,16 @@ button {
   border-radius: 6px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, transform 0.1s;
   font-size: 0.9rem;
 }
 
 button:hover {
   background-color: var(--accent-hover);
+}
+
+button:active {
+  transform: scale(0.98);
 }
 
 .azkar-list {
@@ -213,7 +214,7 @@ button:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.65rem;
+  padding: 0.75rem 0.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   transition: background-color 0.2s;
 }
@@ -224,6 +225,12 @@ button:hover {
 
 .azkar-list li:hover {
   background-color: rgba(255, 255, 255, 0.02);
+}
+
+.zekr-text {
+  flex: 1;
+  cursor: pointer;
+  color: var(--text-primary);
 }
 
 .delete-btn {
@@ -239,14 +246,7 @@ button:hover {
   color: var(--danger-color);
 }
 
-.loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  color: var(--text-secondary);
-}
-
+/* Edit Mode */
 .edit-mode {
   display: flex;
   gap: 0.5rem;
@@ -254,13 +254,10 @@ button:hover {
   align-items: center;
 }
 
-.edit-mode input {
-  padding: 0.5rem;
-}
-
 .save-btn {
   background-color: #22c55e;
   padding: 0.5rem 0.75rem;
+  color: white;
 }
 
 .save-btn:hover {
@@ -268,202 +265,7 @@ button:hover {
 }
 
 .cancel-btn {
-  background-color: var(--card-bg);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--text-secondary);
-  padding: 0.5rem 0.75rem;
-}
-
-.cancel-btn:hover {
-  background-color: rgba(255, 255, 255, 0.05);
-  color: var(--text-primary);
-}
-
-.zekr-text {
-  padding-bottom: 0.75rem;
-  margin-bottom: 1rem;
-}
-
-.setting-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.75rem;
-}
-
-.setting-item:last-child {
-  margin-bottom: 0;
-}
-
-.setting-item label,
-.setting-item span {
-  font-size: 0.95rem;
-}
-
-input[type="number"] {
-  background-color: var(--bg-color);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--text-primary);
-  padding: 0.5rem;
-  border-radius: 6px;
-  width: 70px;
-  text-align: center;
-  font-size: 1rem;
-}
-
-/* Custom Toggle Switch */
-.toggle-wrapper {
-  position: relative;
-}
-
-.toggle-wrapper input[type="checkbox"] {
-  opacity: 0;
-  width: 0;
-  height: 0;
-  position: absolute;
-}
-
-.toggle-wrapper label {
-  display: inline-block;
-  width: 48px;
-  height: 24px;
-  background-color: rgba(255, 255, 255, 0.15);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  position: relative;
-}
-
-.toggle-wrapper label::after {
-  content: '';
-  position: absolute;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background-color: var(--text-secondary);
-  top: 2px;
-  left: 3px;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.toggle-wrapper input[type="checkbox"]:checked+label {
-  background-color: var(--accent-color);
-  border-color: var(--accent-color);
-}
-
-.toggle-wrapper input[type="checkbox"]:checked+label::after {
-  left: 25px;
-  background-color: #0f172a;
-}
-
-.toggle-wrapper label:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-}
-
-.toggle-wrapper input[type="checkbox"]:checked+label:hover {
-  background-color: var(--accent-hover);
-}
-
-.add-form {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-input[type="text"] {
-  flex: 1;
-  background-color: var(--bg-color);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--text-primary);
-  padding: 0.65rem;
-  border-radius: 6px;
-  font-size: 0.95rem;
-}
-
-button {
-  background-color: var(--accent-color);
-  color: #0f172a;
-  border: none;
-  padding: 0.65rem 1.25rem;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  font-size: 0.9rem;
-}
-
-button:hover {
-  background-color: var(--accent-hover);
-}
-
-.azkar-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.azkar-list li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.65rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  transition: background-color 0.2s;
-}
-
-.azkar-list li:last-child {
-  border-bottom: none;
-}
-
-.azkar-list li:hover {
-  background-color: rgba(255, 255, 255, 0.02);
-}
-
-.delete-btn {
   background-color: transparent;
-  color: var(--text-secondary);
-  padding: 0.25rem 0.5rem;
-  font-size: 1.25rem;
-  line-height: 1;
-}
-
-.delete-btn:hover {
-  background-color: rgba(239, 68, 68, 0.1);
-  color: var(--danger-color);
-}
-
-.loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  color: var(--text-secondary);
-}
-
-.edit-mode {
-  display: flex;
-  gap: 0.5rem;
-  flex: 1;
-  align-items: center;
-}
-
-.edit-mode input {
-  padding: 0.5rem;
-}
-
-.save-btn {
-  background-color: #22c55e;
-  padding: 0.5rem 0.75rem;
-}
-
-.save-btn:hover {
-  background-color: #16a34a;
-}
-
-.cancel-btn {
-  background-color: var(--card-bg);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--text-secondary);
   padding: 0.5rem 0.75rem;
@@ -474,205 +276,27 @@ button:hover {
   color: var(--text-primary);
 }
 
-.zekr-text {
-  flex: 1;
-  cursor: pointer;
-  padding: 0.25rem 0;
-}
-
-.setting-item:last-child {
-  margin-bottom: 0;
-}
-
-.setting-item label,
-.setting-item span {
-  font-size: 0.95rem;
-}
-
-input[type="number"] {
-  background-color: var(--bg-color);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--text-primary);
-  padding: 0.5rem;
-  border-radius: 6px;
-  width: 70px;
-  text-align: center;
-  font-size: 1rem;
-}
-
-/* Custom Toggle Switch */
-.toggle-wrapper {
-  position: relative;
-}
-
-.toggle-wrapper input[type="checkbox"] {
-  opacity: 0;
-  width: 0;
-  height: 0;
-  position: absolute;
-}
-
-.toggle-wrapper label {
-  display: inline-block;
-  width: 48px;
-  height: 24px;
-  background-color: rgba(255, 255, 255, 0.15);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  position: relative;
-}
-
-.toggle-wrapper label::after {
-  content: '';
-  position: absolute;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background-color: var(--text-secondary);
-  top: 2px;
-  left: 3px;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.toggle-wrapper input[type="checkbox"]:checked+label {
-  background-color: var(--accent-color);
-  border-color: var(--accent-color);
-}
-
-.toggle-wrapper input[type="checkbox"]:checked+label::after {
-  left: 25px;
-  background-color: #0f172a;
-}
-
-.toggle-wrapper label:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-}
-
-.toggle-wrapper input[type="checkbox"]:checked+label:hover {
-  background-color: var(--accent-hover);
-}
-
-.add-form {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-input[type="text"] {
-  flex: 1;
-  background-color: var(--bg-color);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--text-primary);
-  padding: 0.65rem;
-  border-radius: 6px;
-  font-size: 0.95rem;
-}
-
-button {
-  background-color: var(--accent-color);
-  color: #0f172a;
-  border: none;
-  padding: 0.65rem 1.25rem;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  font-size: 0.9rem;
-}
-
-button:hover {
-  background-color: var(--accent-hover);
-}
-
-.azkar-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.azkar-list li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.65rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  transition: background-color 0.2s;
-}
-
-.azkar-list li:last-child {
-  border-bottom: none;
-}
-
-.azkar-list li:hover {
-  background-color: rgba(255, 255, 255, 0.02);
-}
-
-.delete-btn {
-  background-color: transparent;
-  color: var(--text-secondary);
-  padding: 0.25rem 0.5rem;
-  font-size: 1.25rem;
-  line-height: 1;
-}
-
-.delete-btn:hover {
-  background-color: rgba(239, 68, 68, 0.1);
-  color: var(--danger-color);
-}
-
-.loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  color: var(--text-secondary);
-}
-
-.edit-mode {
-  display: flex;
-  gap: 0.5rem;
-  flex: 1;
-  align-items: center;
-}
-
-.edit-mode input {
-  padding: 0.5rem;
-}
-
-.save-btn {
-  background-color: #22c55e;
-  padding: 0.5rem 0.75rem;
-}
-
-.save-btn:hover {
-  background-color: #16a34a;
-}
-
-.cancel-btn {
-  background-color: var(--card-bg);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--text-secondary);
-  padding: 0.5rem 0.75rem;
-}
-
-.cancel-btn:hover {
-  background-color: rgba(255, 255, 255, 0.05);
-  color: var(--text-primary);
-}
-
-.zekr-text {
-  flex: 1;
-  cursor: pointer;
-  padding: 0.25rem 0;
-}
-
+/* Interval Settings */
 .interval-input-group {
   display: flex;
   gap: 0.5rem;
   align-items: center;
+}
+
+input[type="number"] {
+  background-color: var(--bg-color);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  padding: 0.5rem;
+  border-radius: 6px;
+  width: 70px;
+  text-align: center;
+  font-size: 1rem;
+}
+
+input[type="number"]:focus {
+  outline: 2px solid var(--accent-color);
+  border-color: transparent;
 }
 
 .interval-select {
@@ -683,10 +307,18 @@ button:hover {
   border-radius: 6px;
   font-size: 0.95rem;
   cursor: pointer;
-  padding-right: 1.2rem;
 }
 
 .interval-select:focus {
   outline: 2px solid var(--accent-color);
   border-color: transparent;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  color: var(--text-secondary);
+  font-size: 1.2rem;
 }

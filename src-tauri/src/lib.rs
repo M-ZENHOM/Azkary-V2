@@ -1,15 +1,15 @@
+use chrono::prelude::*;
+use rand::seq::SliceRandom;
+use serde::{Deserialize, Serialize};
 use std::fs;
 use std::sync::Mutex;
 use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use chrono::prelude::*;
-use rand::seq::SliceRandom;
-use serde::{Deserialize, Serialize};
-use tauri::{ Manager, State, Emitter};
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::TrayIconBuilder;
-use tauri_plugin_notification::NotificationExt;
+use tauri::{Emitter, Manager, State};
 use tauri_plugin_autostart::ManagerExt;
+use tauri_plugin_notification::NotificationExt;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 struct Zekr {
@@ -24,23 +24,45 @@ struct AppData {
     daily_count: u64,
     last_reset_date: String,
     last_notification_time: u64,
+    is_paused: bool,
+    last_zekr_id: Option<String>,
 }
 
 impl Default for AppData {
     fn default() -> Self {
         Self {
             azkar: vec![
-                Zekr { id: "1".into(), text: "سبحان الله".into() },
-                Zekr { id: "2".into(), text: "الحمد لله".into() },
-                Zekr { id: "3".into(), text: "الله أكبر".into() },
-                Zekr { id: "4".into(), text: "لا إله إلا الله".into() },
-                Zekr { id: "5".into(), text: "أستغفر الله".into() },
-                Zekr { id: "6".into(), text: "لا حول ولا قوة إلا بالله".into() },
+                Zekr {
+                    id: "1".into(),
+                    text: "سبحان الله".into(),
+                },
+                Zekr {
+                    id: "2".into(),
+                    text: "الحمد لله".into(),
+                },
+                Zekr {
+                    id: "3".into(),
+                    text: "الله أكبر".into(),
+                },
+                Zekr {
+                    id: "4".into(),
+                    text: "لا إله إلا الله".into(),
+                },
+                Zekr {
+                    id: "5".into(),
+                    text: "أستغفر الله".into(),
+                },
+                Zekr {
+                    id: "6".into(),
+                    text: "لا حول ولا قوة إلا بالله".into(),
+                },
             ],
-            interval_seconds: 60, // 1 minutes default
+            interval_seconds: 60, // 1 minute default
             daily_count: 0,
             last_reset_date: Local::now().format("%Y-%m-%d").to_string(),
             last_notification_time: 0,
+            is_paused: false,
+            last_zekr_id: None,
         }
     }
 }
@@ -67,11 +89,12 @@ fn get_data(state: State<AppState>) -> AppData {
 #[tauri::command]
 fn add_zekr(state: State<AppState>, text: String) -> AppData {
     let mut data = state.data.lock().unwrap();
-    let id = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos().to_string();
-    data.azkar.push(Zekr {
-        id,
-        text,
-    });
+    let id = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_nanos()
+        .to_string();
+    data.azkar.push(Zekr { id, text });
     drop(data);
     state.save();
     state.data.lock().unwrap().clone()
@@ -107,6 +130,15 @@ fn set_interval(state: State<AppState>, seconds: u64) -> AppData {
 }
 
 #[tauri::command]
+fn toggle_pause(state: State<AppState>) -> AppData {
+    let mut data = state.data.lock().unwrap();
+    data.is_paused = !data.is_paused;
+    drop(data);
+    state.save();
+    state.data.lock().unwrap().clone()
+}
+
+#[tauri::command]
 fn get_autostart(app: tauri::AppHandle) -> Result<bool, String> {
     let manager = app.autolaunch();
     manager.is_enabled().map_err(|e| e.to_string())
@@ -127,7 +159,10 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, Some(vec!["--minimized"])))
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            Some(vec!["--minimized"]),
+        ))
         .setup(|app| {
             let app_handle = app.handle().clone();
             let app_data_dir = app.path().app_data_dir().unwrap();
@@ -157,71 +192,91 @@ pub fn run() {
                 .icon(app.default_window_icon().unwrap().clone())
                 .menu(&menu)
                 .show_menu_on_left_click(true)
-                .on_menu_event(|app, event| {
-                    match event.id.as_ref() {
-                        "quit" => {
-                            app.exit(0);
-                        }
-                        "show" => {
-                            if let Some(window) = app.get_webview_window("main") {
-                                let _ = window.unminimize();
-                                let _ = window.show();
-                                let _ = window.set_focus();
-                            }
-                        }
-                        _ => {}
+                .on_menu_event(|app, event| match event.id.as_ref() {
+                    "quit" => {
+                        app.exit(0);
                     }
+                    "show" => {
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.unminimize();
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
+                    }
+                    _ => {}
                 })
                 .build(app)?;
 
-            std::thread::spawn(move || {
-                loop {
-                    thread::sleep(Duration::from_secs(1)); // Check every second now
-                    let state = app_handle.state::<AppState>();
-                    
-                    // Scope for lock
-                    let should_notify = {
-                        let mut data = state.data.lock().unwrap();
-                        let now = Local::now();
-                        let today = now.format("%Y-%m-%d").to_string();
+            std::thread::spawn(move || loop {
+                thread::sleep(Duration::from_secs(1));
+                let state = app_handle.state::<AppState>();
 
-                        if data.last_reset_date != today {
-                            data.daily_count = 0;
-                            data.last_reset_date = today;
-                        }
+                let mut data = state.data.lock().unwrap();
+                let now = Local::now();
+                let today = now.format("%Y-%m-%d").to_string();
 
-                        let current_ts = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
-                        let interval_secs = data.interval_seconds;
+                if data.last_reset_date != today {
+                    data.daily_count = 0;
+                    data.last_reset_date = today;
+                }
 
-                        if current_ts >= data.last_notification_time + interval_secs && !data.azkar.is_empty() {
-                            true
-                        } else {
-                            false
-                        }
+                if data.is_paused {
+                    continue;
+                }
+
+                let current_ts = SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs();
+                let interval_secs = data.interval_seconds;
+
+                if current_ts >= data.last_notification_time + interval_secs
+                    && !data.azkar.is_empty()
+                {
+                    let last_id = data.last_zekr_id.clone();
+                    let available_azkar: Vec<_> = data
+                        .azkar
+                        .iter()
+                        .filter(|z| Some(z.id.clone()) != last_id)
+                        .cloned()
+                        .collect();
+
+                    let zekr_to_show = if available_azkar.is_empty() {
+                        data.azkar.choose(&mut rand::thread_rng()).cloned()
+                    } else {
+                        available_azkar.choose(&mut rand::thread_rng()).cloned()
                     };
 
-                    if should_notify {
-                        let mut data = state.data.lock().unwrap();
-                        if let Some(zekr) = data.azkar.choose(&mut rand::thread_rng()).cloned() {
-                            let _ = app_handle.notification()
-                                .builder()
-                                .title(&zekr.text)
-                                .show();
+                    if let Some(zekr) = zekr_to_show {
+                        let _ = app_handle
+                            .notification()
+                            .builder()
+                            .title(&zekr.text)
+                            .show();
 
-                            data.daily_count += 1;
-                            data.last_notification_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
-                            
-                            drop(data);
-                            state.save();
-                            let _ = app_handle.emit("data-updated", ());
-                        }
+                        data.daily_count += 1;
+                        data.last_notification_time = current_ts;
+                        data.last_zekr_id = Some(zekr.id.clone());
+
+                        drop(data);
+                        state.save();
+                        let _ = app_handle.emit("data-updated", ());
                     }
                 }
             });
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![get_data, add_zekr, remove_zekr, update_zekr, set_interval, get_autostart, set_autostart])
+        .invoke_handler(tauri::generate_handler![
+            get_data,
+            add_zekr,
+            remove_zekr,
+            update_zekr,
+            set_interval,
+            get_autostart,
+            set_autostart,
+            toggle_pause
+        ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                 window.hide().unwrap();
