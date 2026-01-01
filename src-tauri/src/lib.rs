@@ -6,7 +6,7 @@ use std::sync::Mutex;
 use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tauri::menu::{Menu, MenuItem};
-use tauri::tray::TrayIconBuilder;
+use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{Emitter, Manager, State};
 use tauri_plugin_autostart::ManagerExt;
 use tauri_plugin_notification::NotificationExt;
@@ -191,7 +191,7 @@ pub fn run() {
             let _tray = TrayIconBuilder::with_id("tray")
                 .icon(app.default_window_icon().unwrap().clone())
                 .menu(&menu)
-                .show_menu_on_left_click(true)
+                .show_menu_on_left_click(false)
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "quit" => {
                         app.exit(0);
@@ -204,6 +204,21 @@ pub fn run() {
                         }
                     }
                     _ => {}
+                })
+                .on_tray_icon_event(|tray, event| {
+                    if let TrayIconEvent::Click {
+                        button: MouseButton::Left,
+                        button_state: MouseButtonState::Up,
+                        ..
+                    } = event
+                    {
+                        let app = tray.app_handle();
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.unminimize();
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
+                    }
                 })
                 .build(app)?;
 
@@ -248,11 +263,7 @@ pub fn run() {
                     };
 
                     if let Some(zekr) = zekr_to_show {
-                        let _ = app_handle
-                            .notification()
-                            .builder()
-                            .title(&zekr.text)
-                            .show();
+                        let _ = app_handle.notification().builder().title(&zekr.text).show();
 
                         data.daily_count += 1;
                         data.last_notification_time = current_ts;
